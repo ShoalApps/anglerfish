@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The icon's colours: its service's brand colours, softened the Material You way. -->
+    <color name="icon_bg">#FFFFE2DB</color>
+    <color name="icon_shape">#FFDA4C22</color>
+    <color name="icon_glyph">#FFFFFFFF</color>
+</resources>
