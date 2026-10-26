@@ -68,6 +68,9 @@ fun SettingsScreen(onBack: () -> Unit) {
             item { Header("Updates") }
             item { Link(if (ShoalManager.installed(context)) "Check for updates in Shoal" else "Get Shoal for updates", "Shoal installs and updates all the Shoal apps") { ShoalManager.checkForUpdates(context) } }
             item { Header("About") }
+            if (io.github.shoalapps.anglerfish.Telemetry.available) item { Toggle("Send error reports", "Anonymous crash and error reports help fix bugs. Never your accounts or history.", io.github.shoalapps.anglerfish.Telemetry.enabled) { v -> io.github.shoalapps.anglerfish.Telemetry.setEnabled(context, v) } }
+            item { Link("Privacy policy", "What Anglerfish sends, and to whom") { open("https://shoalapps.github.io/privacy.html") } }
+            item { Link("Legal", "Licences, trademarks and notices") { open("https://shoalapps.github.io/legal.html") } }
             item { Link("Support Shoal", "Shoal is free and has no ads; donations on Liberapay keep it going") { open("https://liberapay.com/ShoalApps") } }
             item { Link("Source code", "github.com/ShoalApps/anglerfish · GPL-3.0") { open("https://github.com/ShoalApps/anglerfish") } }
             item {

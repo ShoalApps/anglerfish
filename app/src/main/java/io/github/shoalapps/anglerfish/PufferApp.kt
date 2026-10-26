@@ -6,6 +6,7 @@ import io.github.shoalapps.anglerfish.data.Store
 class PufferApp : Application() {
     override fun onCreate() {
         super.onCreate()
+        Telemetry.init(this)
         Graph.app = this
     }
 }

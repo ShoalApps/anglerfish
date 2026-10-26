@@ -18,6 +18,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Telemetry.askOnce(this)
         enableEdgeToEdge()
         link.value = redditLink(intent)
         setContent {

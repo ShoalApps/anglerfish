@@ -8,6 +8,10 @@ Part of [Shoal](https://github.com/ShoalApps). Install and update it with [Shoal
 
 Anglerfish is an independent project, not affiliated with, endorsed by or sponsored by Reddit, Inc.
 
+## Privacy and legal
+
+No ads, no tracking, nothing sent to us unless you agree to anonymous error reports. See the [privacy policy](https://shoalapps.github.io/privacy.html) and [legal notices](https://shoalapps.github.io/legal.html).
+
 ## Support
 
 Shoal is free, open source and has no ads. If you'd like to help it keep going, you can [support Shoal on Liberapay](https://liberapay.com/ShoalApps).
