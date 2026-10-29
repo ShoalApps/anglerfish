@@ -178,6 +178,9 @@ fun PufferRoot(link: String?, onLinkHandled: () -> Unit) {
             dismissButton = { TextButton(onClick = {
                 val clipboard = context.getSystemService(android.content.ClipboardManager::class.java)
                 clipboard.setPrimaryClip(android.content.ClipData.newPlainText("Reddit draft", text))
+                if (android.os.Build.VERSION.SDK_INT < 33) {
+                    android.widget.Toast.makeText(context, "Draft copied", android.widget.Toast.LENGTH_SHORT).show()
+                }
             }) { Text("Copy") } })
     }
     if (searching) SearchDialog(onDismiss = { searching = false }) { q ->
