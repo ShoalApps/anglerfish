@@ -1,4 +1,4 @@
-# Anglerfish
+<p align="center"><a href="https://shoalapps.github.io/"><img src="https://raw.githubusercontent.com/ShoalApps/shoalapps.github.io/main/assets/readme/anglerfish.svg" alt="Anglerfish - a Shoal app, with the rest of the Shoal family" width="100%"></a></p>
 
 Reddit as an app, in Material 3 Expressive: Home, Popular, Search, Inbox and You tabs (a rail on tablets), one page that keeps your place as you switch tabs, Reddit's open-the-app nags removed, reddit.com links and shares opening here, and light or dark following your phone.
 
