@@ -88,7 +88,10 @@ object RedditView {
 
     fun open(url: String) {
         if (!SavedPages.online()) {
-            SavedPages.list().firstOrNull { it.url == url }?.let { read(it) }
+            val saved = SavedPages.list().firstOrNull { it.url == url }
+            if (saved != null) read(saved) else android.widget.Toast.makeText(
+                graphContext(), "This page isn't saved for offline reading", android.widget.Toast.LENGTH_SHORT,
+            ).show()
             return
         }
         readingSaved = false
