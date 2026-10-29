@@ -42,9 +42,13 @@ object SavedPages {
     }.getOrDefault(emptyList()).filter { File(root, it.file).isFile }
     fun destination(url: String, owner: String) = File(root, hash(owner + url) + ".mht")
     @Synchronized fun remember(owner: String, page: SavedPage) {
-        val pages = list(owner).filterNot { it.url == page.url } + page
-        check(prefs.edit().putString(owner, json.encodeToString(pages.takeLast(50))).commit())
-        pages.dropLast(50.coerceAtMost(pages.size)).forEach { File(root, it.file).delete() }
+        val pages = (list(owner).filterNot { it.url == page.url } + page).toMutableList()
+        var bytes = pages.sumOf { File(root, it.file).length() }
+        while (pages.size > 50 || bytes > 100_000_000 && pages.size > 1) {
+            val removed = pages.removeAt(0)
+            val old = File(root, removed.file); bytes -= old.length(); old.delete()
+        }
+        check(prefs.edit().putString(owner, json.encodeToString(pages)).commit())
     }
     fun file(page: SavedPage): File? = File(root, page.file).takeIf { it.isFile && it.canonicalFile.parentFile == root.canonicalFile }
     @Synchronized fun remove(page: SavedPage) {
