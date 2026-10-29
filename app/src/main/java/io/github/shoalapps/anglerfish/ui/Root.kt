@@ -83,16 +83,21 @@ private fun tabFor(url: String): Int = when {
 fun PufferRoot(link: String?, onLinkHandled: () -> Unit) {
     val context = LocalContext.current
     val settings by Graph.store.settings.collectAsState()
+    val online by SavedPages.onlineState.collectAsState()
     val dark = when (settings.theme) { 1 -> false; 2 -> true; else -> isSystemInDarkTheme() }
     val wide = LocalConfiguration.current.screenWidthDp >= 600
     val web = remember { RedditView.get(context, dark, settings.tidy) }
+    var saved by remember { mutableStateOf(false) }
+    var drafting by remember { mutableStateOf(false) }
+    var savedVersion by remember { mutableStateOf(0) }
     var searching by remember { mutableStateOf(false) }
     var showSettings by remember { mutableStateOf(false) }
     val selected = tabFor(RedditView.url)
 
     LaunchedEffect(link) { link?.let { RedditView.open(it); onLinkHandled() } }
-    BackHandler(enabled = RedditView.canGoBack && !showSettings) { RedditView.back() }
+    BackHandler(enabled = RedditView.canGoBack && !showSettings && !RedditView.readingSaved) { RedditView.back() }
     if (showSettings) { SettingsScreen(onBack = { showSettings = false }); return }
+    val savedList = remember(saved, savedVersion) { SavedPages.list() }
 
     fun go(i: Int) {
         if (i == 2) { searching = true; return }
@@ -111,6 +116,15 @@ fun PufferRoot(link: String?, onLinkHandled: () -> Unit) {
                 }
             }
             Column(Modifier.weight(1f).fillMaxSize()) {
+                Column(Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 8.dp)) {
+                    if (!online || RedditView.readingSaved) Text("Offline reading · votes and comments need a connection", style = MaterialTheme.typography.bodySmall)
+                    Row {
+                        TextButton(enabled = SavedPages.online() && !RedditView.readingSaved, onClick = { RedditView.save() }) { Text("Save page") }
+                        TextButton(onClick = { saved = true; savedVersion++ }) { Text("Saved pages") }
+                        TextButton(onClick = { drafting = true }) { Text("Draft") }
+                        if (RedditView.readingSaved && SavedPages.online()) TextButton(onClick = { RedditView.open(RedditView.url) }) { Text("Open online") }
+                    }
+                }
                 Box(Modifier.weight(1f).fillMaxWidth().statusBarsPadding()) {
                     AndroidView(factory = { (web.parent as? ViewGroup)?.removeView(web); web }, modifier = Modifier.fillMaxSize())
                     if (RedditView.loading) LinearWavyProgressIndicator(Modifier.fillMaxWidth().align(Alignment.TopCenter))
@@ -133,6 +147,38 @@ fun PufferRoot(link: String?, onLinkHandled: () -> Unit) {
                 }
             }
         }
+    }
+    if (saved) AlertDialog(
+        onDismissRequest = { saved = false },
+        title = { Text("Saved pages") },
+        text = {
+            androidx.compose.foundation.lazy.LazyColumn {
+                if (savedList.isEmpty()) item { Text("Open a Reddit page online and choose Save page. Snapshots contain only loaded content; streaming videos are not downloaded.") }
+                items(savedList.size) { i ->
+                    val page = savedList[i]
+                    Column {
+                        TextButton(onClick = { RedditView.read(page); saved = false }) { Text(page.title) }
+                        TextButton(onClick = { SavedPages.remove(page); savedVersion++ }) { Text("Remove") }
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = { saved = false }) { Text("Close") } },
+    )
+    if (drafting) {
+        val url = RedditView.url
+        var text by remember(url) { mutableStateOf(SavedPages.draft(url)) }
+        AlertDialog(onDismissRequest = { SavedPages.saveDraft(url, text); drafting = false },
+            title = { Text("Draft for this page") },
+            text = { Column {
+                Text("Saved privately on this phone. Copy it and submit on Reddit when online; Anglerfish does not post it automatically.")
+                OutlinedTextField(text, { text = it; SavedPages.saveDraft(url, it) }, minLines = 4, maxLines = 8)
+            } },
+            confirmButton = { TextButton(onClick = { SavedPages.saveDraft(url, text); drafting = false }) { Text("Save") } },
+            dismissButton = { TextButton(onClick = {
+                val clipboard = context.getSystemService(android.content.ClipboardManager::class.java)
+                clipboard.setPrimaryClip(android.content.ClipData.newPlainText("Reddit draft", text))
+            }) { Text("Copy") } })
     }
     if (searching) SearchDialog(onDismiss = { searching = false }) { q ->
         searching = false

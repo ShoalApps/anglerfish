@@ -23,6 +23,7 @@ import androidx.webkit.WebViewFeature
  */
 object RedditView {
     private var view: WebView? = null
+    var readingSaved by mutableStateOf(false); private set
     private val hosts = listOf("reddit.com", "redd.it", "redditmedia.com", "redditstatic.com", "redditinc.com")
     fun owns(host: String) = hosts.any { host == it || host.endsWith(".$it") }
 
@@ -57,6 +58,7 @@ object RedditView {
         if (early) WebViewCompat.addDocumentStartJavaScript(this, script, setOf("https://www.reddit.com", "https://reddit.com"))
         webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+                if (readingSaved) return true
                 val uri = request.url
                 if (uri.scheme == "https" && owns(uri.host.orEmpty())) return false
                 runCatching { view.context.startActivity(Intent(Intent.ACTION_VIEW, uri).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
@@ -69,28 +71,69 @@ object RedditView {
             override fun onPageFinished(view: WebView, url: String?) {
                 loading = false
                 canGoBack = view.canGoBack()
-                url?.let { RedditView.url = it }
+                if (!readingSaved) url?.let { RedditView.url = it }
                 CookieManager.getInstance().flush()
                 view.evaluateJavascript("Anglerfish.blocked(/blocked by network security/i.test(document.body&&document.body.innerText||''))", null)
             }
             override fun doUpdateVisitedHistory(view: WebView, url: String?, isReload: Boolean) {
                 canGoBack = view.canGoBack()
-                url?.let { RedditView.url = it }
+                if (!readingSaved) url?.let { RedditView.url = it }
             }
         }
         webChromeClient = WebChromeClient()
-        loadUrl("https://www.reddit.com/")
+        if (SavedPages.online()) loadUrl("https://www.reddit.com/") else { loading = false }
         view = this
+        offlinePolicy()
     }
 
-    fun open(url: String) { view?.loadUrl(url) }
-    fun back() { view?.goBack() }
-    fun reload() { view?.reload() }
+    fun open(url: String) {
+        if (!SavedPages.online()) {
+            SavedPages.list().firstOrNull { it.url == url }?.let { read(it) }
+            return
+        }
+        readingSaved = false
+        view?.settings?.javaScriptEnabled = true
+        view?.settings?.blockNetworkLoads = false
+        view?.loadUrl(url)
+    }
+    fun offlinePolicy() {
+        view?.settings?.blockNetworkLoads = readingSaved || !SavedPages.online()
+        view?.settings?.javaScriptEnabled = !readingSaved && SavedPages.online()
+        if (!SavedPages.online()) { view?.stopLoading(); loading = false }
+    }
+    fun save() {
+        val web = view ?: return
+        if (readingSaved || !SavedPages.online()) return
+        val original = web.url ?: return
+        if (android.net.Uri.parse(original).host?.let(::owns) != true) return
+        val owner = SavedPages.owner()
+        val target = SavedPages.destination(original, owner)
+        val title = web.title ?: original
+        web.saveWebArchive(target.absolutePath, false) { path ->
+            if (path != null) {
+                SavedPages.remember(owner, SavedPage(original, title, target.name))
+                android.widget.Toast.makeText(graphContext(), "Page saved for offline reading", android.widget.Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    private fun graphContext() = io.github.shoalapps.anglerfish.Graph.app
+    fun read(page: SavedPage) {
+        if (SavedPages.list().none { it == page }) return
+        val file = SavedPages.file(page) ?: return
+        readingSaved = true
+        url = page.url
+        blocked = false
+        view?.settings?.javaScriptEnabled = false
+        view?.settings?.blockNetworkLoads = true
+        view?.loadUrl(android.net.Uri.fromFile(file).toString())
+    }
+    fun back() { if (!readingSaved && SavedPages.online()) view?.goBack() }
+    fun reload() { if (!readingSaved && SavedPages.online()) view?.reload() }
 
     fun signOut() {
         val cm = CookieManager.getInstance()
         cm.getCookie("https://www.reddit.com")?.split(";")?.map { it.substringBefore("=").trim() }?.forEach { cm.setCookie("https://www.reddit.com", "$it=; Max-Age=0; Path=/; Domain=.reddit.com") }
         cm.flush()
-        view?.loadUrl("https://www.reddit.com/")
+        open("https://www.reddit.com/")
     }
 }

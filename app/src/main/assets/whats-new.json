@@ -1,5 +1,9 @@
 [
   {
+    "title": "Reddit pages to read offline",
+    "body": "Save a loaded page for offline reading, and keep a private draft for that page. Saved pages are read-only and separate for each sign-in. Votes and posting still require a connection. Snapshots include only loaded content and do not download streaming videos."
+  },
+  {
     "title": "A fresh catch, every update",
     "body": "Anglerfish now shows version-specific release notes after an update."
   },

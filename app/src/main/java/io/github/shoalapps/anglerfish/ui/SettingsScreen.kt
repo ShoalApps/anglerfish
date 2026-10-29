@@ -48,6 +48,7 @@ fun SettingsScreen(onBack: () -> Unit) {
     Scaffold(topBar = { TopAppBar(title = { Text("Settings") }, navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back") } }) }) { pad ->
         LazyColumn(Modifier.fillMaxSize().padding(top = pad.calculateTopPadding()).wrapContentWidth().widthIn(max = 720.dp), contentPadding = PaddingValues(bottom = 32.dp)) {
             item(key = "app-language") { io.github.shoalapps.anglerfish.AppLanguage.SettingsRow() }
+            item { Toggle("Offline mode", "Use saved read-only pages; Reddit actions require a connection", s.offlineMode) { v -> Graph.store.updateSettings { it.copy(offlineMode = v) } } }
             item { Header("Look") }
             item {
                 Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) {
