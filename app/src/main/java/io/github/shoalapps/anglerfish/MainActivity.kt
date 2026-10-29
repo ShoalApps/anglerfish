@@ -13,6 +13,7 @@ import io.github.shoalapps.anglerfish.ui.PufferTheme
 import io.github.shoalapps.anglerfish.ui.RedditView
 
 class MainActivity : ComponentActivity() {
+    override fun attachBaseContext(base: android.content.Context) { super.attachBaseContext(io.github.shoalapps.anglerfish.AppLanguage.wrap(base)) }
     /** A reddit.com link the app was opened with. */
     private val link = mutableStateOf<String?>(null)
 
@@ -23,7 +24,7 @@ class MainActivity : ComponentActivity() {
         link.value = redditLink(intent)
         setContent {
             val settings by Graph.store.settings.collectAsState()
-            PufferTheme(settings) { PufferRoot(link.value) { link.value = null } }
+            PufferTheme(settings) { WhatsNew.Host(); PufferRoot(link.value) { link.value = null } }
         }
     }
 
