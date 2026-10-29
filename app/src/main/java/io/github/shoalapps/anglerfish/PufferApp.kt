@@ -10,6 +10,7 @@ class PufferApp : Application() {
         AppLanguage.init(this)
         Telemetry.init(this)
         Graph.app = this
+        io.github.shoalapps.anglerfish.ui.SavedPages.init()
     }
 }
 

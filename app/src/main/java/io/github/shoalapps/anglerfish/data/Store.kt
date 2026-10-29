@@ -11,6 +11,7 @@ import kotlinx.serialization.json.Json
 data class Settings(
     /** 0 = follow the phone, 1 = light, 2 = dark */
     val theme: Int = 0,
+    val offlineMode: Boolean = false,
     val dynamicColor: Boolean = true,
     /** Hide Reddit's open-the-app prompts and banners. */
     val tidy: Boolean = true,
@@ -24,6 +25,7 @@ class Store(context: Context) {
 
     fun updateSettings(change: (Settings) -> Settings) {
         _settings.update(change)
+        io.github.shoalapps.anglerfish.ui.SavedPages.changed()
         prefs.edit().putString("settings", json.encodeToString(Settings.serializer(), _settings.value)).apply()
     }
 }
